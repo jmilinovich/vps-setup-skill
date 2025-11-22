@@ -1,0 +1,126 @@
+# Claude Assistant Guide
+
+This document is specifically for Claude (or any AI assistant) helping with this server in future sessions.
+
+## Context & Purpose
+
+**Owner Profile**: [SKILL_LEVEL] developer learning server management
+**Server Purpose**: [PURPOSE]
+**Communication Style**: Explain things simply, avoid jargon when possible
+
+## Pre-Flight Checklist
+
+When starting a new session, quickly check:
+```bash
+# 1. What's currently running?
+pm2 list
+
+# 2. Server resources
+df -h          # Disk space
+free -h        # Memory
+
+# 3. Recent activity
+ls -la /home/projects/
+
+# 4. Check services
+systemctl status nginx
+```
+
+## Common User Requests
+
+### "Deploy my GitHub project"
+1. Always deploy to `/home/projects/`
+2. Ask for the GitHub URL
+3. Check if it's Node.js, Python, or other
+4. Use PM2 for Node.js apps
+5. Assign a unique port (check `pm2 list` for used ports)
+
+### "My app isn't working"
+1. Check PM2 logs first: `pm2 logs [app-name]`
+2. Verify port isn't already taken: `lsof -i :[port]`
+3. Check if dependencies are installed
+4. Verify firewall allows the port: `ufw status`
+
+### "How do I update my project?"
+```bash
+cd /home/projects/[project-name]
+git pull
+npm install  # or pip install -r requirements.txt
+pm2 restart [project-name]
+```
+
+## Technical Details
+
+### System Architecture
+```
+Internet → UFW Firewall → Nginx (port 80/443) → Apps (ports 3000+)
+                        ↘ Direct access to app ports (3000-3010)
+```
+
+### PM2 Ecosystem
+- PM2 daemon runs as root
+- Apps auto-restart on crash
+- Logs stored in: `~/.pm2/logs/`
+- Config saved in: `~/.pm2/`
+
+### Available Resources
+- **IP Address**: [SERVER_IP]
+- **Domain**: [DOMAIN]
+
+## Security Considerations
+
+### Already Configured
+- UFW firewall with specific ports
+- fail2ban for SSH protection
+
+### Recommended Improvements
+- SSH key-only authentication
+- Non-root user for daily operations
+- Regular security updates
+
+## Important File Locations
+
+```bash
+/home/projects/              # All projects go here
+/etc/nginx/sites-available/  # Nginx configs
+/etc/nginx/sites-enabled/    # Active nginx configs
+~/.pm2/logs/                 # PM2 app logs
+/var/log/nginx/              # Nginx logs
+```
+
+## Quick Fixes
+
+### "Port already in use"
+```bash
+lsof -i :[port]           # Find what's using it
+pm2 delete [app-name]     # If it's a PM2 app
+kill -9 [PID]             # Force kill if needed
+```
+
+### "Can't connect to my app"
+```bash
+ufw status                # Check if port is open
+ufw allow [port]/tcp      # Open it if needed
+```
+
+### "App keeps crashing"
+```bash
+pm2 logs [app-name] --err # See errors
+pm2 describe [app-name]   # Check restart count
+```
+
+## Session Handoff Notes
+
+For the next Claude session, note any:
+- New projects deployed
+- Ports assigned
+- Configuration changes made
+- Issues encountered and solutions
+
+---
+
+**Remember**: Be encouraging, explain what you're doing, and help understand rather than just fixing things silently.
+
+**Philosophy**: "Teach them to fish" - explain commands and what they do.
+
+**Last Updated**: [DATE]
